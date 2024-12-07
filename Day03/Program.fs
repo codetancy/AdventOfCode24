@@ -5,11 +5,6 @@ open System.IO
 
 open Common
 
-module Parser =
-
-    let parse (lines: string seq) =
-        lines |> Seq.map (fun s -> s.ToCharArray()) |> Seq.concat |> List.ofSeq
-
 type Keyword =
     | MUL
     | DO
@@ -23,21 +18,36 @@ type Token =
     | RIGHT_PAREN
     | UNKNOWN
 
+module Parser =
+
+    let parse (lines: string seq) =
+        lines |> Seq.map (fun s -> s.ToCharArray()) |> Seq.concat |> List.ofSeq
+
 module S1 =
 
+    module Patterns =
+        let (|Number|_|) (ls: char list) =
+            match List.span Char.IsDigit ls with
+            | [], _ -> None
+            | digits, tail ->
+                let number = digits |> Array.ofList |> String |> int
+                Some(number, tail)
+
+        let (|Keyword|_|) (keyword: string) (ls: char list) =
+            let keyword = keyword.ToCharArray() |> List.ofArray
+            List.tryAfter keyword ls
+
+    open Patterns
+    
     let tokenize input =
 
         let rec loop input tokens =
             match input with
             | [] -> List.rev tokens
-            | xs when Char.IsDigit(List.head xs) ->
-                let number, rest = List.span Char.IsDigit xs
-                let number = number |> Array.ofList |> String |> int
-                loop rest (NUMBER(number) :: tokens)
-            | 'm' :: 'u' :: 'l' :: rest -> loop rest (IDENTIFIER(MUL) :: tokens)
-            | 'd' :: 'o' :: 'n' :: '\'' :: 't' :: rest ->
-                loop rest (IDENTIFIER(DONT) :: tokens)
-            | 'd' :: 'o' :: rest -> loop rest (IDENTIFIER(DO) :: tokens)
+            | Number(n, rest) -> loop rest (NUMBER(n) :: tokens)
+            | Keyword "mul" rest -> loop rest (IDENTIFIER(MUL) :: tokens)
+            | Keyword "don't" rest -> loop rest (IDENTIFIER(DONT) :: tokens)
+            | Keyword "do" rest -> loop rest (IDENTIFIER(DO) :: tokens)
             | '(' :: xs -> loop xs (LEFT_PAREN :: tokens)
             | ',' :: xs -> loop xs (COMMA :: tokens)
             | ')' :: xs -> loop xs (RIGHT_PAREN :: tokens)
@@ -58,21 +68,25 @@ module S1 =
 
 module S2 =
 
+    type Mode =
+        | ENABLED
+        | DISABLED
+
     let fold tokens =
 
-        let rec loop acc list enabled =
+        let rec loop acc list mode =
 
             match list with
-            | IDENTIFIER(MUL) :: LEFT_PAREN :: NUMBER(n) :: COMMA :: NUMBER(m) :: RIGHT_PAREN :: tail when
-                enabled
-                ->
-                loop (acc + n * m) tail enabled
-            | IDENTIFIER(DO) :: tail -> loop acc tail true
-            | IDENTIFIER(DONT) :: tail -> loop acc tail false
-            | _ :: tail -> loop acc tail enabled
+            | IDENTIFIER(MUL) :: LEFT_PAREN :: NUMBER(n) :: COMMA :: NUMBER(m) :: RIGHT_PAREN :: tail ->
+                match mode with
+                | Mode.ENABLED -> loop (acc + n * m) tail mode
+                | Mode.DISABLED -> loop acc tail mode
+            | IDENTIFIER(DO) :: tail -> loop acc tail Mode.ENABLED
+            | IDENTIFIER(DONT) :: tail -> loop acc tail Mode.DISABLED
+            | _ :: tail -> loop acc tail mode
             | [] -> acc
 
-        loop 0 tokens true
+        loop 0 tokens Mode.ENABLED
 
 let input = File.ReadLines "Files/Program.txt"
 

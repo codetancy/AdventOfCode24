@@ -6,6 +6,7 @@ module Option =
         | true -> Some value
         | false -> None
 
+[<RequireQualifiedAccess>]
 module List =
 
     let span predicate list =
@@ -18,12 +19,20 @@ module List =
 
         loop [] list
 
-    let startsWith needle haystack =
-
-        let rec loop needle haystack =
-            match needle, haystack with
-            | x1 :: xs1, y1 :: ys1 -> if x1 = y1 then true else loop xs1 ys1
-            | [], _ -> true
-            | _, [] -> false
-
-        loop needle haystack
+    let startsWith prefix list =
+        if List.length prefix > List.length list then
+            false
+        else
+           List.take (List.length prefix) list = prefix
+    
+    let after prefix list =
+        if startsWith prefix list then
+            List.skip (List.length prefix) list
+        else
+            failwith "List must start with prefix"
+            
+    let tryAfter prefix list =
+        if startsWith prefix list then
+            Some <| List.skip (List.length prefix) list
+        else
+            None
