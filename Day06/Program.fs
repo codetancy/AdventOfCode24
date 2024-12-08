@@ -54,33 +54,31 @@ module S1 =
         else
             None
 
-    let rec private loop (floor: int[,]) (visited: Set<Step>) (step: Step) =
-        
-        if Set.contains step visited then
-            floor, visited, Outcome.Loop
-        else
-            let visited = Set.add step visited
-            
-            let (y0, x0), direction = step
-            let x, y = offset direction
+    let patrol (floor: int[,]) =
 
-            match y0 + y, x0 + x with
-            | InBounds floor (y1, x1) ->
-                if floor[y1, x1] = -1 then
-                    let visited = Set.remove step visited
-                    let newStep = (y0, x0), next direction
-                    loop floor visited newStep
-                else
-                    do Array2D.mapAt y1 x1 (fun n -> n + 1) floor
-                    let nextStep = (y1, x1), direction
-                    loop floor visited nextStep
-            | _ -> floor, visited, Exited
+        let rec loop (visited: Set<Step>) (step: Step) =
+            if Set.contains step visited then
+                visited, Outcome.Loop
+            else
+                let visited = Set.add step visited
 
-    let patrol floor =
-        let floor = Array2D.copy floor
+                let (y0, x0), direction = step
+                let x, y = offset direction
+
+                match y0 + y, x0 + x with
+                | InBounds floor (y1, x1) ->
+                    if floor[y1, x1] = -1 then
+                        let visited = Set.remove step visited
+                        let newStep = (y0, x0), next direction
+                        loop visited newStep
+                    else
+                        let nextStep = (y1, x1), direction
+                        loop visited nextStep
+                | _ -> visited, Exited
+
         let y0, x0 = Array2D.find 1 floor
         let step = (y0, x0), Direction.NORTH
-        loop floor Set.empty step
+        loop Set.empty step
 
 module S2 =
     open S1
@@ -93,27 +91,27 @@ module S2 =
         obstacles
         |> Seq.indexed
         |> Seq.map (fun (i, (y, x)) ->
-            let floor = Array2D.copy floor
+            // do printf $"{i}/{count} ="
             do floor[y, x] <- -1
-            let _, _, outcome = patrol floor
+            let _, outcome = patrol floor
+            do floor[y, x] <- 0
+            // do printfn $"{outcome}"
             outcome)
 
 let input = File.ReadAllLines "Files/Floor.txt"
 let floor = input |> Parser.parse
 
 // Part 1
-let floor', visited, outcome = input |> Parser.parse |> S1.patrol
-let visitedCount = floor' |> Array2D.count (fun n -> n > 0)
+let visited, outcome = floor |> S1.patrol
+let visitedTiles = visited |> Set.map fst
 
-printfn $"{visitedCount}"
+printfn $"{Set.count visitedTiles}"
 
 // Part 2
-let obstacles: Set<Tile> = visited |> Set.map fst
-
 let loops =
     floor
-    |> S2.paradox obstacles
+    |> S2.paradox visitedTiles
     |> Seq.filter (fun outcome -> outcome = Outcome.Loop)
     |> Seq.length
-    
+
 printfn $"{loops}"
