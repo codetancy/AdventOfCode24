@@ -49,23 +49,26 @@ module S1 =
 
     let patrol floor =
 
-        let rec loop (floor: int[,]) (y0, x0) direction =
+        let rec loop (floor: int[,]) trail =
+            let y0, x0, direction = List.head trail
             let x, y = offset direction
 
             match y0 + y, x0 + x with
             | InBounds floor (y1, x1) ->
                 if floor[y1, x1] = -1 then
-                    loop floor (y0, x0) (next direction)
+                    let trail = (y0, x0, next direction) :: List.tail trail
+                    loop floor trail
                 else
                     do Array2D.mapAt y1 x1 (fun n -> n + 1) floor
-                    loop floor (y1, x1) direction
-            | _ -> floor
+                    let trail = (y1, x1, direction) :: trail
+                    loop floor trail
+            | _ -> floor, trail
         
         let y0, x0 = Array2D.find 1 floor
-        loop floor (y0, x0) Direction.NORTH
+        let trail = [y0, x0, Direction.NORTH]
+        loop floor trail
 
+let input = File.ReadAllLines "Files/Sample.txt"
+let floor, trail = input |> Parser.parse |> S1.patrol
 
-let input = File.ReadAllLines "Files/Floor.txt"
-            
-printfn "%d" (input |> Parser.parse |> S1.patrol |> Array2D.count (fun n -> n > 0))
-
+printfn $"{floor |> Array2D.count (fun n -> n > 0)}"
