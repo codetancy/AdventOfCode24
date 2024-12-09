@@ -43,27 +43,24 @@ module State =
         | c -> failwith $"Unrecognized character {c}"
 
 module S1 =
-    let solve (grid: char[,]) =
+    let solve (wordSearch: char[,]) =
 
-        // fugly
         let rec search (y0, x0) direction state =
-            if state = 'S' then
-                Some direction
-            else
+            match state with
+            | 'S' -> Some direction
+            | _ ->
                 let y, x = offset direction
 
                 match y0 + y, x0 + x with
-                | InBounds grid (y1, x1) ->
-                    let nextState = State.next state
-                    let actualLetter = grid[y1, x1]
-
-                    if nextState = actualLetter then
+                | InBounds wordSearch (y1, x1) ->
+                    match State.next state with
+                    | nextState when nextState = wordSearch[y1, x1] ->
                         search (y1, x1) direction nextState
-                    else
-                        None
-                | _ -> None
+                    | _ -> None
+                    
+                | outOfBounds -> None
 
-        (0, grid)
+        (0, wordSearch)
         ||> Array2D.foldi (fun acc i j value ->
             match value with
             | 'X' ->
