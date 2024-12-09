@@ -12,6 +12,11 @@ module Option =
 module List =
 
     let span predicate list =
+        let prefix = List.takeWhile predicate list
+        let rest = List.skip (List.length prefix) list
+        prefix, rest
+
+    let span' predicate list =
 
         let rec loop acc list =
             match list with
@@ -39,6 +44,25 @@ module List =
         else
             None
 
+    let rec permutations (list: 'T list) =
+        match list with
+        | [] -> [ [] ]
+        | [ x ] -> [ [ x ] ]
+        | list ->
+            list
+            |> List.collect (fun el ->
+                let rest = List.filter (fun x -> not (x = el)) list
+                permutations rest |> List.map (fun perm -> el :: perm))
+
+    let rec permutations' n (list: 'T list) =
+        match n with
+        | 0 -> [ [] ]
+        | n ->
+            list
+            |> List.collect (fun el ->
+                permutations' (n - 1) list
+                |> List.map (fun perm -> el :: perm))
+            
 [<RequireQualifiedAccess>]
 module Array2D =
 
@@ -72,3 +96,10 @@ module Array2D =
 
         (0, values)
         ||> Seq.fold (fun acc el -> if predicate el then acc + 1 else acc)
+
+module Array =
+
+    let span predicate arr =
+        let prefix = Array.takeWhile predicate arr
+        let rest = Array.skip (Array.length prefix) arr
+        prefix, rest
