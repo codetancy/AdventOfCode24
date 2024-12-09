@@ -103,3 +103,15 @@ module Array =
         let prefix = Array.takeWhile predicate arr
         let rest = Array.skip (Array.length prefix) arr
         prefix, rest
+
+module Int64 =
+    
+    let digits n =
+        
+        let rec digits' n count =
+            if n / 10L = 0L then
+                count 
+            else
+                digits' (n / 10L) (count + 1)
+    
+        digits' (abs n) 1
