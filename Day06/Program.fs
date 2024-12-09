@@ -2,6 +2,7 @@
 open System.IO
 
 open Common
+open Common.Patterns
 
 module Parser =
 
@@ -44,15 +45,6 @@ type Tile = int * int
 type Step = Tile * Direction
 
 module S1 =
-
-    let (|InBounds|_|) (floor: int[,]) (y, x) =
-        if
-            (y >= 0 && y < Array2D.length1 floor)
-            && (x >= 0 && x < Array2D.length2 floor)
-        then
-            Some(y, x)
-        else
-            None
 
     let patrol (floor: int[,]) =
 

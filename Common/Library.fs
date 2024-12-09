@@ -96,6 +96,17 @@ module Array2D =
 
         (0, values)
         ||> Seq.fold (fun acc el -> if predicate el then acc + 1 else acc)
+    
+    let foldi folder state (arr: 'T[,]) =
+        let rows = Array2D.length1 arr
+        let cols = Array2D.length2 arr
+        let mutable state = state 
+      
+        for i in 0 .. rows - 1 do
+            for j in 0 .. cols - 1 do
+                state <- folder state i j arr[i, j]
+        
+        state
 
 module Array =
 
@@ -115,3 +126,14 @@ module Int64 =
                 digits' (n / 10L) (count + 1)
     
         digits' (abs n) 1
+
+module Patterns =
+
+    let (|InBounds|_|) (floor: 'T[,]) (y, x) =
+        if
+            (y >= 0 && y < Array2D.length1 floor)
+            && (x >= 0 && x < Array2D.length2 floor)
+        then
+            Some(y, x)
+        else
+            None
