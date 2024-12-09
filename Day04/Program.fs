@@ -57,7 +57,7 @@ module S1 =
                     | nextState when nextState = wordSearch[y1, x1] ->
                         search (y1, x1) direction nextState
                     | _ -> None
-                    
+
                 | outOfBounds -> None
 
         (0, wordSearch)
@@ -72,8 +72,43 @@ module S1 =
                 acc + solutions
             | _ -> acc)
 
+module S2 =
+    let solve (wordSearch: char[,]) =
+
+        (0, wordSearch)
+        ||> Array2D.foldi (fun acc y0 x0 value ->
+            match value with
+            | 'A' ->
+                let diagonals =
+                    [ [ Direction.NorthWest; Direction.SouthEast ]
+                      [ Direction.SouthWest; Direction.NorthEast ] ]
+
+                let xmas =
+                    diagonals
+                    |> List.map (fun diagonal ->
+                        diagonal
+                        |> List.map (fun dir ->
+                            let y, x = offset dir
+
+                            match y0 + y, x0 + x with
+                            | InBounds wordSearch (y1, x1) ->
+                                Some wordSearch[y1, x1]
+                            | outOfBounds -> None)
+                        |> function
+                            | [ Some 'M'; Some 'S' ]
+                            | [ Some 'S'; Some 'M' ] -> 1
+                            | _ -> 0)
+                    |> List.forall (fun x -> x = 1)
+
+                match xmas with
+                | true -> acc + 1
+                | false -> acc
+            | _ -> acc)
+
 let input = File.ReadLines "Files/Message.txt" |> Parser.parse
 
-let solution = S1.solve input
+let xmas = S1.solve input
+printfn $"{xmas}"
 
-printfn $"{solution}"
+let x_mas = S2.solve input
+printfn $"{x_mas}"
