@@ -60,9 +60,50 @@ module List =
         | n ->
             list
             |> List.collect (fun el ->
-                permutations' (n - 1) list
-                |> List.map (fun perm -> el :: perm))
-            
+                permutations' (n - 1) list |> List.map (fun perm -> el :: perm))
+
+    let split (predicate: 'T -> bool) (source: 'T list) =
+
+        let rec loop source output =
+            if Seq.isEmpty source then
+                List.rev output
+            else
+                let section = List.takeWhile (predicate >> not) source
+
+                let remaining =
+                    source
+                    |> List.skip (List.length section)
+                    |> List.skipWhile predicate
+
+                loop remaining (section :: output)
+
+        loop source []
+
+    let middle ls =
+        ls |> List.skip (List.length ls / 2) |> List.head
+
+
+module Seq =
+
+    /// Returns a sequence that, when iterated, yields elements of the underlying
+    /// sequence in chunks separated by when the given predicate returns True
+    let split (predicate: 'T -> bool) (source: 'T seq) =
+        let rec loop (source: 'T seq) : seq<'T seq> =
+            seq {
+                if not (Seq.isEmpty source) then
+                    let section = Seq.takeWhile (predicate >> not) source
+                    yield section
+
+                    let remaining =
+                        source
+                        |> Seq.skip (Seq.length section)
+                        |> Seq.skipWhile predicate
+
+                    yield! loop remaining
+            }
+
+        loop source
+
 [<RequireQualifiedAccess>]
 module Array2D =
 
@@ -96,16 +137,16 @@ module Array2D =
 
         (0, values)
         ||> Seq.fold (fun acc el -> if predicate el then acc + 1 else acc)
-    
+
     let foldi folder state (arr: 'T[,]) =
         let rows = Array2D.length1 arr
         let cols = Array2D.length2 arr
-        let mutable state = state 
-      
+        let mutable state = state
+
         for i in 0 .. rows - 1 do
             for j in 0 .. cols - 1 do
                 state <- folder state i j arr[i, j]
-        
+
         state
 
 module Array =
@@ -116,17 +157,17 @@ module Array =
         prefix, rest
 
 module Int64 =
-    
+
     let digits n =
-        
+
         let rec digits' n count =
             if n / 10L = 0L then
-                count 
+                count
             else
                 digits' (n / 10L) (count + 1)
-    
-        digits' (abs n) 1
 
+        digits' (abs n) 1
+        
 module Patterns =
 
     let (|InBounds|_|) (floor: 'T[,]) (y, x) =
@@ -137,3 +178,5 @@ module Patterns =
             Some(y, x)
         else
             None
+
+    let (|Even|Odd|) n = if n % 2 = 0 then Even else Odd
