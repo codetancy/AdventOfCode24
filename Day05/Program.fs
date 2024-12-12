@@ -39,6 +39,11 @@ module Parser =
             followingRules, precedingRules, updates
         | _ -> failwith "There's not exacly one empty line in the input file"
 
+[<RequireQualifiedAccess>]
+type Correction =
+    | Enabled
+    | Disabled
+
 module Solution =
 
     let rec isOrdered (pageRules: Map<int, int list>) (update: int list) =
@@ -57,10 +62,19 @@ module Solution =
                 | true -> isOrdered pageRules nextPages
                 | false -> false
 
+    let reorder (rules: Map<int, int list>) (pages: int list) =
+        let sorter p1 p2 =
+            match Map.tryFind p1 rules with
+            | Some rules -> if List.contains p2 rules then -1 else 1
+            | None -> 1
+
+        List.sortWith sorter pages
+
     let print
         (followingRules: Map<int, int list>)
         (precedingRules: Map<int, int list>)
         (updates: int list list)
+        (mode: Correction)
         =
 
         updates
@@ -70,12 +84,26 @@ module Solution =
 
             match orderedForwards && orderedBackwards with
             | true -> Some update
-            | false -> None)
+            | false ->
+                match mode with
+                | Correction.Disabled -> None
+                | Correction.Enabled ->
+                    let orderForwards = reorder followingRules
+
+                    let orderBackwards =
+                        List.rev >> reorder precedingRules >> List.rev
+
+                    let ordered = update |> orderForwards |> orderBackwards
+
+                    Some ordered)
         |> List.map List.middle
         |> List.sum
 
 
 let x, y, z = File.ReadAllLines "Files/Problem.txt" |> Parser.parse
-let sum = Solution.print x y z
 
-printfn $"{sum}"
+let s1 = Solution.print x y z Correction.Disabled
+printfn $"{s1}"
+
+let s2 = Solution.print x y z Correction.Enabled
+printfn $"{s2 - s1}"
