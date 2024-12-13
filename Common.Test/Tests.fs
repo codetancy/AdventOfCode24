@@ -60,3 +60,48 @@ module Seq =
 
         let splitted = Seq.split (fun i -> i < 0) numbers
         ()
+
+module Array2D =
+
+    [<Fact>]
+    let ``Test toSeq`` () =
+
+        let array = array2D [ [ 1; 2 ]; [ 3; 4 ] ]
+
+        let expected = [ (0, 0), 1; (0, 1), 2; (1, 0), 3; (1, 1), 4 ]
+
+        let actual = Array2D.toSeq array
+        actual.Should().SequenceEqual(expected)
+
+    [<Fact>]
+    let ``Test count`` () =
+
+        let array = array2D [ [ 1; 2 ]; [ 3; 4 ] ]
+
+        let actual = Array2D.count (fun n -> n % 2 = 0) array
+
+        actual.Should().Be(2)
+
+    [<Fact>]
+    let ``Test find`` () =
+
+        let array = array2D [ [ 1; 2 ]; [ 3; 4 ] ]
+
+        let actual = Array2D.find 3 array
+
+        actual.Should().Be((1, 0))
+
+    let ``Test fold`` () =
+
+        let array = array2D [ [ 1; 2 ]; [ 3; 4 ] ]
+
+        let actual =
+            Array2D.fold
+                (fun acc (_, value) ->
+                    match value % 2 = 0 with
+                    | true -> acc + value
+                    | _ -> acc)
+                0
+                array
+
+        actual.Should().Be(6)

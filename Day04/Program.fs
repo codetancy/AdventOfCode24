@@ -61,7 +61,7 @@ module S1 =
                 | outOfBounds -> None
 
         (0, wordSearch)
-        ||> Array2D.foldi (fun acc i j value ->
+        ||> Array2D.fold (fun acc ((i, j), value) ->
             match value with
             | 'X' ->
                 let solutions =
@@ -76,7 +76,7 @@ module S2 =
     let solve (wordSearch: char[,]) =
 
         (0, wordSearch)
-        ||> Array2D.foldi (fun acc y0 x0 value ->
+        ||> Array2D.fold (fun acc ((y0, x0), value) ->
             match value with
             | 'A' ->
                 let diagonals =

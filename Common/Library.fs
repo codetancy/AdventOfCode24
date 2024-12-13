@@ -107,47 +107,33 @@ module Seq =
 [<RequireQualifiedAccess>]
 module Array2D =
 
+    /// Views the given Array2D as an enumerable collection of pairs. The
+    /// sequence will be ordered by the indices of each element
+    let toSeq (array: 'T[,]) =
+        seq {
+            for i in 0 .. Array2D.length1 array - 1 do
+                for j in 0 .. Array2D.length2 array - 1 do
+                    (i, j), array[i, j]
+        }
+
     let mapAt index1 index2 transform (array: 'T[,]) =
         array[index1, index2] <- transform array[index1, index2]
 
+    /// Returns the indices of the first matching element
     let find value (array: 'T[,]) =
-        let rows = Array2D.length1 array
-        let cols = Array2D.length2 array
+        toSeq array |> Seq.find (fun (_, el) -> el = value) |> fst
 
-        let indices =
-            seq {
-                for i in 0 .. rows - 1 do
-                    for j in 0 .. cols - 1 do
-                        if array[i, j] = value then
-                            yield i, j
-            }
-
-        indices |> Seq.head
-
+    /// Counts the number of elements for which the given predicate returns true
     let count predicate (array: 'T[,]) =
-        let rows = Array2D.length1 array
-        let cols = Array2D.length2 array
-
-        let values =
-            seq {
-                for i in 0 .. rows - 1 do
-                    for j in 0 .. cols - 1 do
-                        yield array[i, j]
-            }
-
-        (0, values)
+        toSeq array
+        |> Seq.map snd
+        |> (fun x -> (0, x))
         ||> Seq.fold (fun acc el -> if predicate el then acc + 1 else acc)
 
-    let foldi folder state (arr: 'T[,]) =
-        let rows = Array2D.length1 arr
-        let cols = Array2D.length2 arr
-        let mutable state = state
+    let fold folder state (array: 'T[,]) = toSeq array |> Seq.fold folder state
 
-        for i in 0 .. rows - 1 do
-            for j in 0 .. cols - 1 do
-                state <- folder state i j arr[i, j]
-
-        state
+    let groupBy (projection: 'T -> 'U) (array: 'T[,]) =
+        toSeq array |> Seq.map snd |> Seq.groupBy projection
 
 module Array =
 
@@ -167,7 +153,7 @@ module Int64 =
                 digits' (n / 10L) (count + 1)
 
         digits' (abs n) 1
-        
+
 module Patterns =
 
     let (|InBounds|_|) (floor: 'T[,]) (y, x) =
