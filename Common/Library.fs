@@ -62,6 +62,18 @@ module List =
             |> List.collect (fun el ->
                 permutations' (n - 1) list |> List.map (fun perm -> el :: perm))
 
+    let rec combination n ls =
+        match n, ls with
+        | 0, _ -> [ [] ]
+        | _, [] -> []
+        | n, head :: tail ->
+            let c1 =
+                combination (n - 1) tail
+                |> List.map (fun subCombination -> head :: subCombination)
+
+            let c2 = combination n tail
+            c1 @ c2
+
     let split (predicate: 'T -> bool) (source: 'T list) =
 
         let rec loop source output =
@@ -132,8 +144,14 @@ module Array2D =
 
     let fold folder state (array: 'T[,]) = toSeq array |> Seq.fold folder state
 
-    let groupBy (projection: 'T -> 'U) (array: 'T[,]) =
+    let groupBy projection (array: 'T[,]) =
         toSeq array |> Seq.map snd |> Seq.groupBy projection
+
+    let groupBy' projection (array: 'T[,]) =
+        toSeq array |> Seq.groupBy projection
+
+    let filter predicate (array: 'T[,]) =
+        toSeq array |> Seq.filter (fun ((i, j), value) -> predicate value)
 
 module Array =
 
