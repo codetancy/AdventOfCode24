@@ -1,5 +1,6 @@
 ﻿namespace Common
 
+open System.Numerics
 open Microsoft.FSharp.Core
 
 module Option =
@@ -127,6 +128,11 @@ module Array2D =
                 for j in 0 .. Array2D.length2 array - 1 do
                     (i, j), array[i, j]
         }
+    
+    /// Checks whether the given indices are within the given Array's bounds
+    let inBounds (index1, index2) (array: 'T[,]) =
+        (index1 >= 0 && index1 < Array2D.length1 array)
+            && (index2 >= 0 && index2 < Array2D.length2 array)
 
     let mapAt index1 index2 transform (array: 'T[,]) =
         array[index1, index2] <- transform array[index1, index2]
@@ -171,16 +177,23 @@ module Int64 =
                 digits' (n / 10L) (count + 1)
 
         digits' (abs n) 1
+        
+module Vector2 =
+    
+    module Patterns =
+        
+        let (|In|_|) (array: 'T[,]) (vector: Vector2) =
+            let i, j = int vector.Y, int vector.X
+            match Array2D.inBounds (i, j) array with
+            | true -> Some vector
+            | false -> None
+            
 
 module Patterns =
 
-    let (|InBounds|_|) (floor: 'T[,]) (y, x) =
-        if
-            (y >= 0 && y < Array2D.length1 floor)
-            && (x >= 0 && x < Array2D.length2 floor)
-        then
-            Some(y, x)
-        else
-            None
+    let (|InBounds|_|) (array: 'T[,]) (y, x) =
+        match Array2D.inBounds (y, x) array with
+        | true -> Some(y, x)
+        | false -> None
 
     let (|Even|Odd|) n = if n % 2 = 0 then Even else Odd

@@ -14,6 +14,10 @@ module Vector2 =
 
     let create (y, x) = Vector2(float32 x, float32 y)
 
+type Harmonics =
+    | Enabled
+    | Disabled
+
 module Solution =
 
     let locateAntennas grid =
@@ -28,7 +32,27 @@ module Solution =
             key, vectors)
         |> Map
 
-    let solve grid (antenna: Map<char, Vector2 list>) =
+    let uniqueAntinodes
+        grid
+        (antenna: Map<char, Vector2 list>)
+        (harmonics: Harmonics)
+        =
+
+        let rec getAntinodes
+            (source: Vector2)
+            (displacement: Vector2)
+            (antinodes: Vector2 list)
+            =
+            let candidate = source + displacement
+
+            match candidate with
+            | Vector2.Patterns.In grid antinode ->
+                match harmonics with
+                | Enabled ->
+                    antinode :: (getAntinodes antinode displacement antinodes)
+                | Disabled -> antinode :: antinodes
+            | _ -> antinodes
+
         let antinodesByAntenna =
             antenna
             |> Map.map (fun _ locations ->
@@ -37,22 +61,24 @@ module Solution =
                 |> List.collect List.permutations
                 |> List.map (fun vectors -> vectors[0], vectors[1])
                 |> List.collect (fun (v1, v2) ->
-                    let d = v2 - v1
-                    let v3 = v2 + d
+                    let source =
+                        match harmonics with
+                        | Enabled -> v1
+                        | Disabled -> v2
 
-                    match int v3.Y, int v3.X with
-                    | Patterns.InBounds grid _ -> [ v3 ]
-                    | _ -> []))
+                    getAntinodes source (v2 - v1) []))
 
-        let unique =
-            Map.toSeq antinodesByAntenna |> Seq.collect snd |> Seq.distinct
-
-        Seq.length unique
-
+        Map.toSeq antinodesByAntenna
+        |> Seq.collect snd
+        |> Seq.distinct
+        |> Seq.length
 
 
 let grid = File.ReadAllLines "Files/Problem.txt" |> Parser.parse
 let antenas = Solution.locateAntennas grid
-let uniqueAntinodes = Solution.solve grid antenas
 
-printfn $"{uniqueAntinodes}"
+let antinodes = Solution.uniqueAntinodes grid antenas Harmonics.Disabled
+printfn $"{antinodes}"
+
+let harmonics = Solution.uniqueAntinodes grid antenas Harmonics.Enabled
+printfn $"{harmonics}"
