@@ -1,7 +1,11 @@
-﻿namespace Common
+﻿module Common
 
 open System.Numerics
 open Microsoft.FSharp.Core
+open System.IO
+
+let inc n = n + 1
+let dec n = n - 1
 
 module Option =
     let toOption value bool =
@@ -128,11 +132,11 @@ module Array2D =
                 for j in 0 .. Array2D.length2 array - 1 do
                     (i, j), array[i, j]
         }
-    
+
     /// Checks whether the given indices are within the given Array's bounds
     let inBounds (index1, index2) (array: 'T[,]) =
         (index1 >= 0 && index1 < Array2D.length1 array)
-            && (index2 >= 0 && index2 < Array2D.length2 array)
+        && (index2 >= 0 && index2 < Array2D.length2 array)
 
     let mapAt index1 index2 transform (array: 'T[,]) =
         array[index1, index2] <- transform array[index1, index2]
@@ -166,6 +170,19 @@ module Array =
         let rest = Array.skip (Array.length prefix) arr
         prefix, rest
 
+    let lens idx =
+        fun arr -> Array.get arr idx, fun value arr -> Array.set arr idx value
+
+    /// Updates the array swapping the elements at the given indices
+    let swap idx1 idx2 (array: 'T[]) =
+        let aux = array[idx1]
+        array[idx1] <- array[idx2]
+        array[idx2] <- aux
+
+module Int =
+
+    let toChar (n: int) = char <| n + int '0'
+
 module Int64 =
 
     let digits n =
@@ -177,17 +194,18 @@ module Int64 =
                 digits' (n / 10L) (count + 1)
 
         digits' (abs n) 1
-        
+
 module Vector2 =
-    
+
     module Patterns =
-        
+
         let (|In|_|) (array: 'T[,]) (vector: Vector2) =
             let i, j = int vector.Y, int vector.X
+
             match Array2D.inBounds (i, j) array with
             | true -> Some vector
             | false -> None
-            
+
 
 module Patterns =
 
@@ -197,3 +215,15 @@ module Patterns =
         | false -> None
 
     let (|Even|Odd|) n = if n % 2 = 0 then Even else Odd
+
+module File =
+
+    /// Opens an existing UTF-8 encoded text file and returns a stream of
+    /// characters
+    let stream path =
+        let reader = File.OpenText path
+
+        seq {
+            while not reader.EndOfStream do
+                yield reader.Read()
+        }
