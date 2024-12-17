@@ -183,6 +183,17 @@ module Int =
 
     let toChar (n: int) = char <| n + int '0'
 
+    let isPositive n = n > 0
+
+    let isNegative n = n < 0
+
+    module Patterns =
+
+        let (|Positive|Negative|Zero|) n =
+            if isPositive n then Positive
+            elif isNegative n then Negative
+            else Zero
+
 module Int64 =
 
     let digits n =

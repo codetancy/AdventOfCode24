@@ -1,6 +1,7 @@
 ﻿open System
 open System.IO
 open Common
+open Common.Int.Patterns
 open Common.Patterns
 
 module Parser =
@@ -16,39 +17,39 @@ module Solution =
         |> Seq.collect (fun (idx, memory) ->
             let id =
                 match idx with
-                | Even -> Some(idx / 2)
-                | Odd -> None
+                | Even -> idx / 2
+                | Odd -> -((idx / 2) + 1)
 
             Seq.replicate memory id)
+
+    let (|File|Free|) n = if n < 0 then Free else File
 
     let compact memory =
 
         let mutable i = 0
-        let mutable j = Array.findIndexBack Option.isSome memory
+        let mutable j = Array.findIndexBack (fun n -> n > 0) memory
 
         while i < j do
 
             match memory[i], memory[j] with
-            | None, Some _ -> Array.swap i j memory
-            | _, None -> j <- dec j
-            | Some _, _ -> i <- inc i
+            | Free, File -> Array.swap i j memory
+            | _, Free -> j <- dec j
+            | File, _ -> i <- inc i
 
         memory
 
-    let checksum (layout: int option seq) =
+    let checksum (layout: int seq) =
 
         layout
-        |> Seq.filter Option.isSome
         |> Seq.indexed
         |> (fun seq -> (0L, seq))
-        ||> Seq.fold (fun acc (idx, maybeId) ->
-            match maybeId with
-            | Some id -> acc + int64 idx * int64 id
-            | None -> acc)
+        ||> Seq.fold (fun acc (idx, id) ->
+            match id with
+            | Positive -> acc + int64 idx * int64 id
+            | _ -> acc)
 
     let solve diskMap =
-
-        diskMap |> toLayout |> Array.ofSeq |> compact |> checksum
+        toLayout diskMap |> Array.ofSeq |> compact |> checksum
 
 let input = Parser.parse "Datasets/Day09.txt"
 let solution = Solution.solve input
