@@ -7,8 +7,6 @@
 
     <ItemGroup>
         <Compile Include="Program.fs"/>
-        <Content Include="Files\Sample.txt" />
-        <Content Include="Files\Message.txt" />
     </ItemGroup>
 
     <ItemGroup>

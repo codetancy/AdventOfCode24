@@ -88,7 +88,7 @@ module S2 =
 
         loop 0 tokens Mode.ENABLED
 
-let input = File.ReadLines "Files/Program.txt"
+let input = File.ReadLines "Datasets/Day03.txt"
 
 printfn "%d" (input |> Parser.parse |> S1.tokenize |> S1.fold)
 printfn "%d" (input |> Parser.parse |> S1.tokenize |> S2.fold)

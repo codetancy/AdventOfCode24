@@ -90,7 +90,7 @@ module S2 =
             // do printfn $"{outcome}"
             outcome)
 
-let input = File.ReadAllLines "Files/Floor.txt"
+let input = File.ReadAllLines "Datasets/Day06.txt"
 let floor = input |> Parser.parse
 
 // Part 1

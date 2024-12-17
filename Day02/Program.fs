@@ -73,7 +73,7 @@ module S2 =
     let solution parse reports =
         S1.countSafe (parse reports) Dampening.On
 
-let input = File.ReadLines("Files/Reports.txt")
+let input = File.ReadLines("Datasets/Day02.txt")
 
 S1.solution Parser.parse input |> printfn "%d"
 S2.solution Parser.parse input |> printfn "%d"

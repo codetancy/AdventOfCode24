@@ -105,7 +105,7 @@ module S2 =
                 | false -> acc
             | _ -> acc)
 
-let input = File.ReadLines "Files/Message.txt" |> Parser.parse
+let input = File.ReadLines "Datasets/Day04.txt" |> Parser.parse
 
 let xmas = S1.solve input
 printfn $"{xmas}"

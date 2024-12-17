@@ -70,7 +70,7 @@ module S1 =
         | [] -> 0L
         | _ -> target
 
-let input = File.ReadAllLines "Files/Equations.txt" |> Parser.parse
+let input = File.ReadAllLines "Datasets/Day07.txt" |> Parser.parse
 
 let s1 =
     input

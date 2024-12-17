@@ -100,7 +100,7 @@ module Solution =
         |> List.sum
 
 
-let x, y, z = File.ReadAllLines "Files/Problem.txt" |> Parser.parse
+let x, y, z = File.ReadAllLines "Datasets/Day05.txt" |> Parser.parse
 
 let s1 = Solution.print x y z Correction.Disabled
 printfn $"{s1}"

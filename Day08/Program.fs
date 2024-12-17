@@ -74,7 +74,7 @@ module Solution =
         |> Seq.length
 
 
-let grid = File.ReadAllLines "Files/Problem.txt" |> Parser.parse
+let grid = File.ReadAllLines "Datasets/Day08.txt" |> Parser.parse
 let antenas = Solution.locateAntennas grid
 
 let antinodes = Solution.uniqueAntinodes grid antenas Harmonics.Disabled

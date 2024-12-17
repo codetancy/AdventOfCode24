@@ -33,7 +33,7 @@ let solution1 parser lines = S1.totalDistance (parser lines)
 
 let solution2 parser lines = S2.totalSimilarity (parser lines)
 
-let input = File.ReadLines("Files/Locations.txt")
+let input = File.ReadLines("Datasets/Day01.txt")
 
 printfn "%d" <| solution1 Parser.parse input
 printfn "%d" <| solution2 Parser.parse input
