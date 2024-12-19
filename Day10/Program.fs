@@ -25,49 +25,55 @@ module Direction =
         | South -> (1, 0)
         | West -> (0, -1)
 
-
 let countTrails (topographicMap: int[,]) =
 
-    let scoreOf i j height =
+    let calculateScore (trailHead: int * int) =
 
         let mutable reached = Set.empty
 
-        let rec dfs y0 x0 height (visited: Set<int * int>) =
-            // do printfn $"{y0},{x0}"
+        let rec dfs (y0, x0) (visited: Set<int * int>) =
             let visited = Set.add (y0, x0) visited
 
             let isInBounds (y, x) =
                 match y, x with
-                | Patterns.InBounds topographicMap _ -> true
-                | _ -> false
+                | Patterns.InBounds topographicMap _ -> Some(y, x)
+                | _ -> None
 
-            let wasVisited (y, x) = Set.contains (y, x) visited
+            let hasNotBeenVisited (y, x) =
+                if Set.contains (y, x) visited then None else Some(y, x)
 
-            let isNext (y, x) = height + 1 = topographicMap[y, x]
+            let isNext height (y, x) =
+                if topographicMap[y, x] = height + 1 then
+                    Some(y, x)
+                else
+                    None
 
-            match height with
-            | 9 ->
-                // do printfn "Adding one"
-                reached <- Set.add (y0, x0) reached
-            | _ ->
+            match topographicMap[y0, x0] with
+            | 9 -> reached <- Set.add (y0, x0) reached
+            | height ->
                 Direction.Values
                 |> List.map Direction.toOffset
                 |> List.map (fun (y, x) -> y0 + y, x + x0)
-                |> List.filter isInBounds
-                |> List.filter (not << wasVisited)
-                |> List.filter isNext
-                |> List.iter (fun (y1, x1) -> dfs y1 x1 (height + 1) visited)
+                |> List.choose (fun potentialLocation ->
+                    Some potentialLocation
+                    |> Option.bind isInBounds
+                    |> Option.bind hasNotBeenVisited
+                    |> Option.bind (isNext height))
+                |> List.iter (fun nextLocation -> dfs nextLocation visited)
 
-        if height = 0 then
-            // do printfn $"START {i} {j}"
-            dfs i j height Set.empty
-
+        dfs trailHead Set.empty
         Set.count reached
 
-    topographicMap |> Array2D.mapi scoreOf
+    let trailHeads =
+        topographicMap
+        |> Array2D.toSeq
+        |> Seq.filter (fun (_, height) -> height = 0)
+
+    trailHeads
+    |> Seq.map (fun (trailHead, _) -> calculateScore trailHead)
+    |> Seq.sum
 
 let topograficMap = Parsing.parse "Datasets/Day10.txt"
-let trails = countTrails topograficMap
+let solution = countTrails topograficMap
 
-let solution = Array2D.toSeq trails |> Seq.map snd |> Seq.sum
 printfn $"{solution}"
