@@ -180,6 +180,10 @@ module Array =
         array[idx1] <- array[idx2]
         array[idx2] <- aux
 
+module Char =
+
+    let toInt (c: char) = c - '0' |> int
+
 module Int =
 
     let toChar (n: int) = char <| n + int '0'
