@@ -1,5 +1,6 @@
 ﻿module Common
 
+open System
 open System.Numerics
 open Microsoft.FSharp.Core
 open System.IO
@@ -238,3 +239,13 @@ module File =
             while not reader.EndOfStream do
                 yield reader.Read()
         }
+
+module Memory =
+
+    /// Swaps the content of two Memory<'T> objects. Both `dest` and `source`
+    /// must have the same length to ensure proper swapping.
+    let swap (dest: Memory<'T>) (source: Memory<'T>) =
+        let aux = Array.zeroCreate dest.Length
+        dest.CopyTo(aux.AsMemory())
+        source.CopyTo(dest)
+        aux.AsMemory().CopyTo(source)

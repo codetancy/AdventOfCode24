@@ -22,9 +22,9 @@ module Solution =
 
             Seq.replicate memory id)
 
-    let (|File|Free|) n = if n < 0 then Free else File
-
     let compact memory =
+
+        let (|File|Free|) n = if n < 0 then Free else File
 
         let mutable i = 0
         let mutable j = Array.findIndexBack (fun n -> n > 0) memory
@@ -48,10 +48,65 @@ module Solution =
             | Positive -> acc + int64 idx * int64 id
             | _ -> acc)
 
+    let toMemoryMap layout =
+
+        Seq.indexed layout
+        |> Seq.groupBy snd
+        |> Seq.map (fun (key, els) ->
+            let indices = Seq.map fst els |> Array.ofSeq
+            let start = Array.head indices
+            let length = Array.last indices - start + 1
+            key, Memory(layout, start, length))
+        |> Array.ofSeq
+
+    let compact' (memory: (int * Memory<int>)[]) =
+
+        let files =
+            memory
+            |> Seq.indexed
+            |> Seq.filter (fun (i, (id, block)) -> id >= 0)
+            |> Seq.rev
+
+        let spaces =
+            memory |> Seq.indexed |> Seq.filter (fun (i, (id, block)) -> id < 0)
+
+        for fileIndex, file in files do
+
+            let fileId, fileBlock = file
+
+            let maybeFreeSpaceIndex =
+                spaces
+                |> Seq.tryFind (fun (_, (_, freeBlock)) ->
+                    freeBlock.Length >= fileBlock.Length)
+
+            match maybeFreeSpaceIndex with
+            | Some(freeSpaceIndex, free) ->
+
+                if freeSpaceIndex < fileIndex then
+                    let freeId, freeBlock = free
+
+                    fileBlock
+                    |> Memory.swap (freeBlock.Slice(0, fileBlock.Length))
+
+                    let updatedFreeBlock = freeBlock.Slice(fileBlock.Length)
+                    memory[freeSpaceIndex] <- freeId, updatedFreeBlock
+
+            | None -> ()
+
     let solve diskMap =
         toLayout diskMap |> Array.ofSeq |> compact |> checksum
 
-let input = Parser.parse "Datasets/Day09.txt"
+    let solve' diskMap =
+        let layout = Array.ofSeq <| toLayout diskMap
+        let memory = toMemoryMap layout
+        compact' memory
+        checksum layout
+
+let input = Parser.parse "Datasets/Day09.txt" |> Seq.cache
 let solution = Solution.solve input
 
 printfn $"{solution}"
+
+let solution2 = Solution.solve' input
+
+printfn $"{solution2}"
