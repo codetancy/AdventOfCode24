@@ -25,9 +25,9 @@ module Direction =
         | South -> (1, 0)
         | West -> (0, -1)
 
-let countTrails (topographicMap: int[,]) =
+let solve (topographicMap: int[,]) =
 
-    let calculateScore (trailHead: int * int) =
+    let scoreOf (trailHead: int * int) =
 
         let mutable reached = Set.empty
 
@@ -64,16 +64,51 @@ let countTrails (topographicMap: int[,]) =
         dfs trailHead Set.empty
         Set.count reached
 
+    let ratingOf (trailHead: int * int) =
+
+        let mutable reached = List.empty
+
+        let rec dfs (y0, x0) (visited: List<int * int>) =
+            let visited = (y0, x0) :: visited
+
+            let isInBounds (y, x) =
+                match y, x with
+                | Patterns.InBounds topographicMap _ -> Some(y, x)
+                | _ -> None
+
+            let hasNotBeenVisited (y, x) =
+                if List.contains (y, x) visited then None else Some(y, x)
+
+            let isNext height (y, x) =
+                if topographicMap[y, x] = height + 1 then
+                    Some(y, x)
+                else
+                    None
+
+            match topographicMap[y0, x0] with
+            | 9 -> reached <- (y0, x0) :: reached
+            | height ->
+                Direction.Values
+                |> List.map Direction.toOffset
+                |> List.map (fun (y, x) -> y0 + y, x + x0)
+                |> List.choose (fun potentialLocation ->
+                    Some potentialLocation
+                    |> Option.bind isInBounds
+                    |> Option.bind hasNotBeenVisited
+                    |> Option.bind (isNext height))
+                |> List.iter (fun nextLocation -> dfs nextLocation visited)
+
+        dfs trailHead List.empty
+        List.length reached
+
     let trailHeads =
-        topographicMap
-        |> Array2D.toSeq
-        |> Seq.filter (fun (_, height) -> height = 0)
+        topographicMap |> Array2D.toSeq |> Seq.filter (fun (_, height) -> height = 0)
 
     trailHeads
-    |> Seq.map (fun (trailHead, _) -> calculateScore trailHead)
-    |> Seq.sum
+    |> Seq.map (fun (trailHead, _) -> scoreOf trailHead, ratingOf trailHead)
+    |> Seq.fold (fun acc (score, rating) -> fst acc + score, snd acc + rating) (0, 0)
 
-let topograficMap = Parsing.parse "Datasets/Day10.txt"
-let solution = countTrails topograficMap
+let topograficMap = Parsing.parse "Datasets/Day10_Sample.txt"
+let score, rating = solve topograficMap
 
-printfn $"{solution}"
+printfn $"{score},{rating}"
