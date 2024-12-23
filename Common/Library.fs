@@ -122,6 +122,11 @@ module Seq =
 
         loop source
 
+    let rec print (formatter: 'T -> string) (source: 'T seq) =
+        printf "[ "
+        source |> Seq.iter (fun el -> printf $"{formatter el} ")
+        printfn "]"
+
 [<RequireQualifiedAccess>]
 module Array2D =
 
@@ -192,6 +197,13 @@ module Int =
 
     let isNegative n = n < 0
 
+    let isEven n = n &&& 1 = 0
+
+    let digits n =
+        match n with
+        | 0 -> 1
+        | _ -> (float (abs n) |> log10 |> floor |> int) + 1
+
     module Patterns =
 
         let (|Positive|Negative|Zero|) n =
@@ -210,6 +222,11 @@ module Int64 =
                 digits' (n / 10L) (count + 1)
 
         digits' (abs n) 1
+
+    let digits' (n: int64) =
+        match n with
+        | 0L -> 1
+        | _ -> (float (abs n) |> log10 |> floor |> int) + 1
 
 module Vector2 =
 
