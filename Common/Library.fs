@@ -193,40 +193,28 @@ module Int =
 
     let toChar (n: int) = char <| n + int '0'
 
-    let isPositive n = n > 0
+    let inline isPositive (n: ^T) = n > LanguagePrimitives.GenericZero
 
-    let isNegative n = n < 0
+    let inline isNegative (n: ^T) = n < LanguagePrimitives.GenericZero
 
-    let isEven n = n &&& 1 = 0
+    let inline isEven (n: ^T) =
+        n &&& LanguagePrimitives.GenericOne = LanguagePrimitives.GenericZero
 
-    let digits n =
-        match n with
-        | 0 -> 1
-        | _ -> (float (abs n) |> log10 |> floor |> int) + 1
+    let inline isOdd (n: ^T) =
+        n &&& LanguagePrimitives.GenericOne = LanguagePrimitives.GenericOne
+
+    let inline digits (n: ^T) =
+        if n = LanguagePrimitives.GenericZero then
+            1
+        else
+            (n |> abs |> float |> log10 |> floor |> int) + 1
 
     module Patterns =
 
-        let (|Positive|Negative|Zero|) n =
+        let inline (|Positive|Negative|Zero|) (n: ^T) =
             if isPositive n then Positive
             elif isNegative n then Negative
             else Zero
-
-module Int64 =
-
-    let digits n =
-
-        let rec digits' n count =
-            if n / 10L = 0L then
-                count
-            else
-                digits' (n / 10L) (count + 1)
-
-        digits' (abs n) 1
-
-    let digits' (n: int64) =
-        match n with
-        | 0L -> 1
-        | _ -> (float (abs n) |> log10 |> floor |> int) + 1
 
 module Vector2 =
 
@@ -247,7 +235,10 @@ module Patterns =
         | true -> Some(y, x)
         | false -> None
 
-    let (|Even|Odd|) n = if n % 2 = 0 then Even else Odd
+    let inline isEven (n: ^T) =
+        n &&& LanguagePrimitives.GenericOne = LanguagePrimitives.GenericZero
+
+    let inline (|Even|Odd|) (n: ^T) = if isEven n then Even n else Odd n
 
 module File =
 

@@ -17,8 +17,8 @@ module Solution =
         |> Seq.collect (fun (idx, memory) ->
             let id =
                 match idx with
-                | Even -> idx / 2
-                | Odd -> -((idx / 2) + 1)
+                | Even _ -> idx / 2
+                | Odd _ -> -((idx / 2) + 1)
 
             Seq.replicate memory id)
 

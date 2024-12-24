@@ -36,8 +36,7 @@ module Operator =
         function
         | Add -> (+)
         | Multiply -> (*)
-        | Concat ->
-            (fun x y -> int64 (pown 10.0 (Int64.digits y)) * x + y)
+        | Concat -> (fun x y -> int64 (pown 10.0 (Int.digits y)) * x + y)
 
 module S1 =
 

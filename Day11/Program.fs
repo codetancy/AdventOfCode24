@@ -11,21 +11,20 @@ module Parsing =
         |> Seq.map int64
         |> List.ofSeq
 
-type Rule =
-    | Single of int64
-    | Double of int64 * int64
-
-let (|Rule1|Rule2|Rule3|) (n: int64) =
-    if n = 0L then
-        Rule1(Single(n + 1L))
+let (|First|_|) n =
+    if n = LanguagePrimitives.GenericZero then
+        Some LanguagePrimitives.GenericOne
     else
-        let nDigits = Int64.digits' n
+        None
 
-        if Int.isEven nDigits then
-            let divisor = pown 10L (nDigits / 2)
-            Rule2(Double(n / divisor, n % divisor))
-        else
-            Rule3(Single(2024L * n))
+let (|Second|_|) n =
+    match Int.digits n with
+    | Patterns.Even digits ->
+        let divisor = pown 10L (digits / 2)
+        Some(n / divisor, n % divisor)
+    | Patterns.Odd _ -> None
+
+let (|Third|_|) n = Some(2024L * n)
 
 let rec solve nBlinks (stones: int64 seq) =
 
@@ -33,18 +32,10 @@ let rec solve nBlinks (stones: int64 seq) =
         stones
         |> Seq.collect (fun stone ->
             match stone with
-            | Rule1 n ->
-                match n with
-                | Single value -> [ value ]
-                | _ -> failwith ""
-            | Rule2 d ->
-                match d with
-                | Double(n1, n2) -> [ n1; n2 ]
-                | _ -> failwith ""
-            | Rule3 c ->
-                match c with
-                | Single value -> [ value ]
-                | _ -> failwith "")
+            | First next -> [ next ]
+            | Second(left, right) -> [ left; right ]
+            | Third next -> [ next ]
+            | _ -> failwith "Unreachable")
 
     if nBlinks = 0 then
         Seq.length stones
