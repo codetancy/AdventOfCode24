@@ -1,6 +1,8 @@
-﻿open System.Data
+﻿open System.Collections.Generic
+open System.Data
 open System.IO
 open Common
+open Common.Int
 
 module Parsing =
 
@@ -26,25 +28,43 @@ let (|Second|_|) n =
 
 let (|Third|_|) n = Some(2024L * n)
 
-let rec solve nBlinks (stones: int64 seq) =
+let blink =
+    function
+    | First next -> [ next ]
+    | Second(left, right) -> [ left; right ]
+    | Third next -> [ next ]
+    | _ -> failwith "Unreachable"
 
-    let blink stones =
-        stones
-        |> Seq.collect (fun stone ->
-            match stone with
-            | First next -> [ next ]
-            | Second(left, right) -> [ left; right ]
-            | Third next -> [ next ]
-            | _ -> failwith "Unreachable")
+let rec blinkStones remaining turn stones (cache: Dictionary<int * int64, _>) =
 
-    if nBlinks = 0 then
-        Seq.length stones
-    else
-        solve (nBlinks - 1) (blink stones)
+    (0L, stones)
+    ||> Seq.fold (fun acc stone ->
+        let maybeCached = cache.TryGetValue((turn, stone)) |> Option.fromTuple
 
+        match maybeCached with
+        | Some cached -> acc + cached
+        | None ->
+            if remaining = 0 then
+                cache.Add((turn, stone), 1L)
+                acc + 1L
+            else
+                let stones' = blink stone
+
+                let result =
+                    blinkStones (dec remaining) (inc turn) stones' cache
+
+                cache.Add((turn, stone), result)
+
+                acc + result)
+
+let solve remaining stones =
+    let cache = Dictionary()
+    blinkStones remaining 0 stones cache
 
 let input = Parsing.parse "Datasets/Day11.txt"
-printfn $"{Seq.print string input}"
 
-let stones = solve 25 input
-printfn $"{stones}"
+let part1 = solve 25 input
+printfn $"{part1}"
+
+let part2 = solve 75 input
+printfn $"{part2}"

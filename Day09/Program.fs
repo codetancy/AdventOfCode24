@@ -33,8 +33,8 @@ module Solution =
 
             match memory[i], memory[j] with
             | Free, File -> Array.swap i j memory
-            | _, Free -> j <- dec j
-            | File, _ -> i <- inc i
+            | _, Free -> j <- Int.dec j
+            | File, _ -> i <- Int.inc i
 
         memory
 
