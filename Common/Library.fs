@@ -237,7 +237,7 @@ module Vector2 =
 
 module Patterns =
 
-    let (|InBounds|_|) (array: 'T[,]) (y, x) =
+    let inline (|InBounds|_|) (array: 'T[,]) (y, x) =
         match Array2D.inBounds (y, x) array with
         | true -> Some(y, x)
         | false -> None
