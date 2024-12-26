@@ -29,7 +29,7 @@ module Offset =
 
 let (|InRegion|_|) garden label cell =
     match cell with
-    | Patterns.InBounds garden (y, x) when garden[y, x] = label -> Some cell
+    | Array2D.InBounds garden (y, x) when garden[y, x] = label -> Some cell
     | _ -> None
 
 let priceOf

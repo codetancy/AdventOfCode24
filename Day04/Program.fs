@@ -2,7 +2,6 @@
 open System.IO
 
 open Common
-open Common.Patterns
 
 module Parser =
 
@@ -52,7 +51,7 @@ module S1 =
                 let y, x = offset direction
 
                 match y0 + y, x0 + x with
-                | InBounds wordSearch (y1, x1) ->
+                | Array2D.InBounds wordSearch (y1, x1) ->
                     match State.next state with
                     | nextState when nextState = wordSearch[y1, x1] ->
                         search (y1, x1) direction nextState
@@ -91,7 +90,7 @@ module S2 =
                             let y, x = offset dir
 
                             match y0 + y, x0 + x with
-                            | InBounds wordSearch (y1, x1) ->
+                            | Array2D.InBounds wordSearch (y1, x1) ->
                                 Some wordSearch[y1, x1]
                             | outOfBounds -> None)
                         |> function

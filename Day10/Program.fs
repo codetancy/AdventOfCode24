@@ -35,7 +35,7 @@ let solve (topographicMap: int[,]) =
 
             let isInBounds (y, x) =
                 match y, x with
-                | Patterns.InBounds topographicMap _ -> Some(y, x)
+                | Array2D.InBounds topographicMap _ -> Some(y, x)
                 | _ -> None
 
             let hasNotBeenVisited (y, x) =

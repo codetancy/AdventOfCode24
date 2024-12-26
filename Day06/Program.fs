@@ -1,8 +1,6 @@
-﻿open System
-open System.IO
+﻿open System.IO
 
 open Common
-open Common.Patterns
 
 module Parser =
 
@@ -58,7 +56,7 @@ module S1 =
                 let x, y = offset direction
 
                 match y0 + y, x0 + x with
-                | InBounds floor (y1, x1) ->
+                | Array2D.InBounds floor (y1, x1) ->
                     if floor[y1, x1] = -1 then
                         let visited = Set.remove step visited
                         let newStep = (y0, x0), next direction
@@ -78,16 +76,13 @@ module S2 =
     let paradox obstacles floor =
         let y0, x0 = Array2D.find 1 floor
         let obstacles = Set.remove (y0, x0) obstacles
-        let count = Set.count obstacles
 
         obstacles
         |> Seq.indexed
-        |> Seq.map (fun (i, (y, x)) ->
-            // do printf $"{i}/{count} ="
+        |> Seq.map (fun (_, (y, x)) ->
             do floor[y, x] <- -1
             let _, outcome = patrol floor
             do floor[y, x] <- 0
-            // do printfn $"{outcome}"
             outcome)
 
 let input = File.ReadAllLines "Datasets/Day06.txt"

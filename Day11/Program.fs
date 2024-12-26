@@ -2,7 +2,6 @@
 open System.Data
 open System.IO
 open Common
-open Common.Int
 
 module Parsing =
 
@@ -21,10 +20,10 @@ let (|First|_|) n =
 
 let (|Second|_|) n =
     match Int.digits n with
-    | Patterns.Even digits ->
+    | Int.Even digits ->
         let divisor = pown 10L (digits / 2)
         Some(n / divisor, n % divisor)
-    | Patterns.Odd _ -> None
+    | Int.Odd _ -> None
 
 let (|Third|_|) n = Some(2024L * n)
 
@@ -51,7 +50,11 @@ let rec blinkStones remaining turn stones (cache: Dictionary<int * int64, _>) =
                 let stones' = blink stone
 
                 let result =
-                    blinkStones (dec remaining) (inc turn) stones' cache
+                    blinkStones
+                        (Int.dec remaining)
+                        (Int.inc turn)
+                        stones'
+                        cache
 
                 cache.Add((turn, stone), result)
 

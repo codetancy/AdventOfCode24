@@ -6,6 +6,7 @@ open Microsoft.FSharp.Core
 open System.IO
 
 
+[<RequireQualifiedAccess>]
 module Option =
     let toOption value bool =
         match bool with
@@ -104,6 +105,7 @@ module List =
         ls |> List.skip (List.length ls / 2) |> List.head
 
 
+[<RequireQualifiedAccess>]
 module Seq =
 
     /// Returns a sequence that, when iterated, yields elements of the underlying
@@ -172,6 +174,12 @@ module Array2D =
     let filter predicate (array: 'T[,]) =
         toSeq array |> Seq.filter (fun ((i, j), value) -> predicate value)
 
+    let inline (|InBounds|_|) (array: 'T[,]) (y, x) =
+        match inBounds (y, x) array with
+        | true -> Some(y, x)
+        | false -> None
+
+[<RequireQualifiedAccess>]
 module Array =
 
     let span predicate arr =
@@ -188,10 +196,12 @@ module Array =
         array[idx1] <- array[idx2]
         array[idx2] <- aux
 
+[<RequireQualifiedAccess>]
 module Char =
 
     let toInt (c: char) = c - '0' |> int
 
+[<RequireQualifiedAccess>]
 module Int =
 
     let toChar (n: int) = char <| n + int '0'
@@ -210,19 +220,20 @@ module Int =
     let inline isOdd (n: ^T) =
         n &&& LanguagePrimitives.GenericOne = LanguagePrimitives.GenericOne
 
+    let inline (|Even|Odd|) (n: ^T) = if isEven n then Even n else Odd n
+    
     let inline digits (n: ^T) =
         if n = LanguagePrimitives.GenericZero then
             1
         else
             (n |> abs |> float |> log10 |> floor |> int) + 1
 
-    module Patterns =
+    let inline (|Positive|Negative|Zero|) (n: ^T) =
+        if isPositive n then Positive
+        elif isNegative n then Negative
+        else Zero
 
-        let inline (|Positive|Negative|Zero|) (n: ^T) =
-            if isPositive n then Positive
-            elif isNegative n then Negative
-            else Zero
-
+[<RequireQualifiedAccess>]
 module Vector2 =
 
     module Patterns =
@@ -234,19 +245,7 @@ module Vector2 =
             | true -> Some vector
             | false -> None
 
-
-module Patterns =
-
-    let inline (|InBounds|_|) (array: 'T[,]) (y, x) =
-        match Array2D.inBounds (y, x) array with
-        | true -> Some(y, x)
-        | false -> None
-
-    let inline isEven (n: ^T) =
-        n &&& LanguagePrimitives.GenericOne = LanguagePrimitives.GenericZero
-
-    let inline (|Even|Odd|) (n: ^T) = if isEven n then Even n else Odd n
-
+[<RequireQualifiedAccess>]
 module File =
 
     /// Opens an existing UTF-8 encoded text file and returns a stream of
@@ -259,6 +258,7 @@ module File =
                 yield reader.Read()
         }
 
+[<RequireQualifiedAccess>]
 module Memory =
 
     /// Swaps the content of two Memory<'T> objects. Both `dest` and `source`

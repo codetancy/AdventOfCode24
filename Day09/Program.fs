@@ -1,8 +1,6 @@
 ﻿open System
 open System.IO
 open Common
-open Common.Int.Patterns
-open Common.Patterns
 
 module Parser =
 
@@ -17,8 +15,8 @@ module Solution =
         |> Seq.collect (fun (idx, memory) ->
             let id =
                 match idx with
-                | Even _ -> idx / 2
-                | Odd _ -> -((idx / 2) + 1)
+                | Int.Even _ -> idx / 2
+                | Int.Odd _ -> -((idx / 2) + 1)
 
             Seq.replicate memory id)
 
@@ -45,7 +43,7 @@ module Solution =
         |> (fun seq -> (0L, seq))
         ||> Seq.fold (fun acc (idx, id) ->
             match id with
-            | Positive -> acc + int64 idx * int64 id
+            | Int.Positive -> acc + int64 idx * int64 id
             | _ -> acc)
 
     let toMemoryMap layout =
