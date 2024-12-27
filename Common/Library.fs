@@ -5,7 +5,6 @@ open System.Numerics
 open Microsoft.FSharp.Core
 open System.IO
 
-
 [<RequireQualifiedAccess>]
 module Option =
     let toOption value bool =
@@ -221,7 +220,7 @@ module Int =
         n &&& LanguagePrimitives.GenericOne = LanguagePrimitives.GenericOne
 
     let inline (|Even|Odd|) (n: ^T) = if isEven n then Even n else Odd n
-    
+
     let inline digits (n: ^T) =
         if n = LanguagePrimitives.GenericZero then
             1

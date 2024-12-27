@@ -9,6 +9,7 @@ module Parsing =
         |> Seq.map (fun line -> line.ToCharArray())
         |> array2D
 
+[<RequireQualifiedAccess>]
 type Direction =
     | North
     | East
@@ -17,27 +18,36 @@ type Direction =
 
     static member Values = [ North; East; South; West ]
 
+    static member Diagonals =
+        [ North, East; South, East; South, West; North, West ]
 
 module Offset =
 
     let ofDirection =
         function // (i, j)
-        | North -> (-1, 0)
-        | East -> (0, 1)
-        | South -> (1, 0)
-        | West -> (0, -1)
+        | Direction.North -> (-1, 0)
+        | Direction.East -> (0, 1)
+        | Direction.South -> (1, 0)
+        | Direction.West -> (0, -1)
 
-let (|InRegion|_|) garden label cell =
-    match cell with
-    | Array2D.InBounds garden (y, x) when garden[y, x] = label -> Some cell
-    | _ -> None
+[<RequireQualifiedAccess>]
+type Region =
+    | In
+    | Out
+
+let regionOf garden label =
+    function
+    | Array2D.InBounds garden (y, x) when garden[y, x] = label -> Region.In
+    | _ -> Region.Out
 
 let priceOf
     (cell: int * int)
     (garden: char[,])
     (label: char)
     (visited: HashSet<_>)
-    =
+    : int64 =
+    let inline (+) (p1: int * int) (p2: int * int) =
+        fst p1 + fst p2, snd p1 + snd p2
 
     let mutable area = 0
     let mutable perimeter = 0
@@ -48,18 +58,17 @@ let priceOf
 
         let cell = queue.Dequeue()
 
-        match cell with
-        | InRegion garden label cell ->
+        match regionOf garden label cell with
+        | Region.In ->
             if not <| visited.Contains cell then
                 visited.Add(cell) |> ignore
 
                 do area <- Int.inc area
 
                 Direction.Values
-                |> Seq.map Offset.ofDirection
-                |> Seq.map (fun (y, x) -> fst cell + y, snd cell + x)
+                |> Seq.map (fun dir -> Offset.ofDirection dir + cell)
                 |> Seq.iter queue.Enqueue
-        | _ -> perimeter <- Int.inc perimeter
+        | Region.Out -> perimeter <- Int.inc perimeter
 
     let result = area * perimeter
     // printfn $"{label} {area} * {perimeter} = {result}"
@@ -71,11 +80,10 @@ let totalPriceOf (garden: char[,]) =
 
     garden
     |> Array2D.toSeq
-    |> Seq.filter (fun ((y, x), _) -> not <| visited.Contains(y, x))
+    |> Seq.filter (fun (coords, _) -> not <| visited.Contains(coords))
     |> Seq.fold
-        (fun acc (location, label) ->
-            acc + priceOf location garden label visited)
-        0
+        (fun acc (coords, label) -> acc + priceOf coords garden label visited)
+        0L
 
 let garden = Parsing.parse "Datasets/Day12.txt"
 let price = totalPriceOf garden
