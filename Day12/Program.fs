@@ -40,16 +40,32 @@ let regionOf garden label =
     | Array2D.InBounds garden (y, x) when garden[y, x] = label -> Region.In
     | _ -> Region.Out
 
+let countCorners (garden: char[,]) (label: char) (cell: int * int) =
+    let inline (+) (p1: int * int) (p2: int * int) =
+        fst p1 + fst p2, snd p1 + snd p2
+
+    let regionOf' = regionOf garden label
+
+    Direction.Diagonals
+    |> Seq.map (fun (d1, d2) -> Offset.ofDirection d1, Offset.ofDirection d2)
+    |> Seq.map (fun (d1, d2) -> d1, d2, d1 + d2)
+    |> Seq.map (fun (d1, d2, d3) -> d1 + cell, d2 + cell, d3 + cell)
+    |> Seq.map (fun (n1, n2, n3) -> regionOf' n1, regionOf' n2, regionOf' n3)
+    |> Seq.map (function
+        | Region.In, Region.In, Region.Out -> 1 // Inner
+        | Region.Out, Region.Out, _ -> 1 //Outer
+        | _ -> 0)
+    |> Seq.sum
+
 let priceOf
     (cell: int * int)
     (garden: char[,])
     (label: char)
     (visited: HashSet<_>)
-    : int64 =
-    let inline (+) (p1: int * int) (p2: int * int) =
-        fst p1 + fst p2, snd p1 + snd p2
+    =
 
     let mutable area = 0
+    let mutable sides = 0
     let mutable perimeter = 0
 
     let queue = Queue([ cell ])
@@ -64,15 +80,16 @@ let priceOf
                 visited.Add(cell) |> ignore
 
                 do area <- Int.inc area
+                do sides <- sides + (countCorners garden label cell)
 
                 Direction.Values
-                |> Seq.map (fun dir -> Offset.ofDirection dir + cell)
+                |> Seq.map Offset.ofDirection
+                |> Seq.map (fun offset ->
+                    fst offset + fst cell, snd offset + snd cell)
                 |> Seq.iter queue.Enqueue
         | Region.Out -> perimeter <- Int.inc perimeter
 
-    let result = area * perimeter
-    // printfn $"{label} {area} * {perimeter} = {result}"
-    result
+    area * perimeter, area * sides
 
 let totalPriceOf (garden: char[,]) =
 
@@ -82,10 +99,14 @@ let totalPriceOf (garden: char[,]) =
     |> Array2D.toSeq
     |> Seq.filter (fun (coords, _) -> not <| visited.Contains(coords))
     |> Seq.fold
-        (fun acc (coords, label) -> acc + priceOf coords garden label visited)
-        0L
+        (fun (totalRegular, totalBulk) (coords, label) ->
+            let regular, bulk = priceOf coords garden label visited
+            totalRegular + int64 regular, totalBulk + int64 bulk)
+        (0L, 0L)
+
 
 let garden = Parsing.parse "Datasets/Day12.txt"
-let price = totalPriceOf garden
+let regular, bulk = totalPriceOf garden
 
-printfn $"{price}"
+printfn $"Regular: {regular}"
+printfn $"Bulk: {bulk}"
