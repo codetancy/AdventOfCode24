@@ -235,14 +235,12 @@ module Int =
 [<RequireQualifiedAccess>]
 module Vector2 =
 
-    module Patterns =
+    let (|In|_|) (array: 'T[,]) (vector: Vector2) =
+        let i, j = int vector.Y, int vector.X
 
-        let (|In|_|) (array: 'T[,]) (vector: Vector2) =
-            let i, j = int vector.Y, int vector.X
-
-            match Array2D.inBounds (i, j) array with
-            | true -> Some vector
-            | false -> None
+        match Array2D.inBounds (i, j) array with
+        | true -> Some vector
+        | false -> None
 
 [<RequireQualifiedAccess>]
 module File =

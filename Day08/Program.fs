@@ -46,7 +46,7 @@ module Solution =
             let candidate = source + displacement
 
             match candidate with
-            | Vector2.Patterns.In grid antinode ->
+            | Vector2.In grid antinode ->
                 match harmonics with
                 | Enabled ->
                     antinode :: (getAntinodes antinode displacement antinodes)
