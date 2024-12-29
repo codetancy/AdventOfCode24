@@ -28,6 +28,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Day11", "Day11\Day11.fsproj
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Day12", "Day12\Day12.fsproj", "{7D19EB5A-1F79-425A-BA3A-7F714E9C9EB7}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Gomu", "Gomu\Gomu.fsproj", "{55479901-2839-48F8-9E31-C305D4298C0A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -90,5 +92,9 @@ Global
 		{7D19EB5A-1F79-425A-BA3A-7F714E9C9EB7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7D19EB5A-1F79-425A-BA3A-7F714E9C9EB7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7D19EB5A-1F79-425A-BA3A-7F714E9C9EB7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{55479901-2839-48F8-9E31-C305D4298C0A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{55479901-2839-48F8-9E31-C305D4298C0A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{55479901-2839-48F8-9E31-C305D4298C0A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{55479901-2839-48F8-9E31-C305D4298C0A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

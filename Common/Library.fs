@@ -6,18 +6,6 @@ open Microsoft.FSharp.Core
 open System.IO
 
 [<RequireQualifiedAccess>]
-module Option =
-    let toOption value bool =
-        match bool with
-        | true -> Some value
-        | false -> None
-
-    let inline fromTuple (tuple: bool * ^T) =
-        match tuple with
-        | true, value -> Some value
-        | false, _ -> None
-
-[<RequireQualifiedAccess>]
 module List =
 
     let span predicate list =

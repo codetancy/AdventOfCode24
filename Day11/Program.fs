@@ -1,7 +1,10 @@
 ﻿open System.Collections.Generic
 open System.Data
 open System.IO
+
 open Common
+open Gomu.Option
+open Microsoft.FSharp.Core
 
 module Parsing =
 
