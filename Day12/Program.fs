@@ -2,6 +2,10 @@
 open System.IO
 open Common
 
+open Gomu.Arrays
+open Gomu.Vectors
+open Gomu.Tuples
+
 module Parsing =
 
     let parse filename =
@@ -9,7 +13,6 @@ module Parsing =
         |> Seq.map (fun line -> line.ToCharArray())
         |> array2D
 
-[<RequireQualifiedAccess>]
 type Direction =
     | North
     | East
@@ -24,11 +27,11 @@ type Direction =
 module Offset =
 
     let ofDirection =
-        function // (i, j)
-        | Direction.North -> (-1, 0)
-        | Direction.East -> (0, 1)
-        | Direction.South -> (1, 0)
-        | Direction.West -> (0, -1)
+        function
+        | North -> { X = -1; Y = 0 }
+        | East -> { X = 0; Y = 1 }
+        | South -> { X = 1; Y = 0 }
+        | West -> { X = 0; Y = -1 }
 
 [<RequireQualifiedAccess>]
 type Region =
@@ -37,32 +40,26 @@ type Region =
 
 let regionOf garden label =
     function
-    | Array2D.InBounds garden (y, x) when garden[y, x] = label -> Region.In
+    | Array2D.InBounds garden p when garden[p.X, p.Y] = label -> Region.In
     | _ -> Region.Out
 
-let countCorners (garden: char[,]) (label: char) (cell: int * int) =
-    let inline (+) (p1: int * int) (p2: int * int) =
-        fst p1 + fst p2, snd p1 + snd p2
-
-    let regionOf' = regionOf garden label
+let countCorners (garden: char[,]) (label: char) cell =
 
     Direction.Diagonals
-    |> Seq.map (fun (d1, d2) -> Offset.ofDirection d1, Offset.ofDirection d2)
-    |> Seq.map (fun (d1, d2) -> d1, d2, d1 + d2)
-    |> Seq.map (fun (d1, d2, d3) -> d1 + cell, d2 + cell, d3 + cell)
-    |> Seq.map (fun (n1, n2, n3) -> regionOf' n1, regionOf' n2, regionOf' n3)
-    |> Seq.map (function
-        | Region.In, Region.In, Region.Out -> 1 // Inner
-        | Region.Out, Region.Out, _ -> 1 //Outer
-        | _ -> 0)
-    |> Seq.sum
+    |> Seq.map (fun (d1, d2) ->
+        let d1 = Offset.ofDirection d1
+        let d2 = Offset.ofDirection d2
 
-let priceOf
-    (cell: int * int)
-    (garden: char[,])
-    (label: char)
-    (visited: HashSet<_>)
-    =
+        (d1, d2, d1 + d2)
+        |> Triple.map (fun offset -> cell + offset)
+        |> Triple.map (regionOf garden label))
+    |> Seq.filter (function
+        | Region.In, Region.In, Region.Out -> true // Inner
+        | Region.Out, Region.Out, _ -> true //Outer
+        | _ -> false)
+    |> Seq.length
+
+let priceOf cell (garden: char[,]) (label: char) (visited: HashSet<_>) =
 
     let mutable area = 0
     let mutable sides = 0
@@ -84,8 +81,7 @@ let priceOf
 
                 Direction.Values
                 |> Seq.map Offset.ofDirection
-                |> Seq.map (fun offset ->
-                    fst offset + fst cell, snd offset + snd cell)
+                |> Seq.map (fun offset -> cell + offset)
                 |> Seq.iter queue.Enqueue
         | Region.Out -> perimeter <- Int.inc perimeter
 

@@ -4,6 +4,8 @@ open System
 open Xunit
 open Common
 open Faqt
+open Gomu.Arrays
+open Gomu.Vectors
 
 module List =
 
@@ -68,7 +70,11 @@ module Array2D =
 
         let array = array2D [ [ 1; 2 ]; [ 3; 4 ] ]
 
-        let expected = [ (0, 0), 1; (0, 1), 2; (1, 0), 3; (1, 1), 4 ]
+        let expected =
+            [ { X = 0; Y = 0 }, 1
+              { X = 0; Y = 1 }, 2
+              { X = 1; Y = 0 }, 3
+              { X = 1; Y = 1 }, 4 ]
 
         let actual = Array2D.toSeq array
         actual.Should().SequenceEqual(expected)
@@ -89,7 +95,7 @@ module Array2D =
 
         let actual = Array2D.find 3 array
 
-        actual.Should().Be((1, 0))
+        actual.Should().Be({ X = 1; Y = 0 })
 
     let ``Test fold`` () =
 

@@ -1,18 +1,14 @@
-﻿open System
-open System.Collections.Generic
-open System.IO
+﻿open System.IO
 
-open System.Numerics
 open Common
+
+open Gomu.Arrays
+open Gomu.Vectors
 
 module Parser =
 
     let parse (lines: string seq) =
         lines |> Seq.map (fun s -> s.ToCharArray()) |> array2D
-
-module Vector2 =
-
-    let create (y, x) = Vector2(float32 x, float32 y)
 
 type Harmonics =
     | Enabled
@@ -20,33 +16,26 @@ type Harmonics =
 
 module Solution =
 
-    let locateAntennas grid =
+    let locateAntennas (grid: char[,]) =
         Array2D.toSeq grid
         |> Seq.filter (function
             | _, '.' -> false
             | _ -> true)
         |> Seq.groupBy snd
-        |> Seq.map (fun (key, els) ->
-            // (i, j) -> { X = j, Y = i }
-            let vectors = els |> Seq.map (fst >> Vector2.create) |> List.ofSeq
-            key, vectors)
+        |> Seq.map (fun (key, els) -> key, els |> Seq.map fst |> List.ofSeq)
         |> Map
 
     let uniqueAntinodes
-        grid
-        (antenna: Map<char, Vector2 list>)
+        (grid: char[,])
+        (antenna: Map<char, Vector2i list>)
         (harmonics: Harmonics)
         =
 
-        let rec getAntinodes
-            (source: Vector2)
-            (displacement: Vector2)
-            (antinodes: Vector2 list)
-            =
+        let rec getAntinodes source displacement antinodes =
             let candidate = source + displacement
 
             match candidate with
-            | Vector2.In grid antinode ->
+            | Array2D.InBounds grid antinode ->
                 match harmonics with
                 | Enabled ->
                     antinode :: (getAntinodes antinode displacement antinodes)

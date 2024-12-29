@@ -1,6 +1,8 @@
-﻿open System
-open System.IO
+﻿open System.IO
 open Common
+
+open Gomu.Arrays
+open Gomu.Vectors
 
 module Parsing =
 
@@ -17,42 +19,41 @@ type Direction =
     static member Values = [ North; East; South; West ]
 
 module Direction =
-
     let toOffset =
         function
-        | North -> (-1, 0)
-        | East -> (0, 1)
-        | South -> (1, 0)
-        | West -> (0, -1)
+        | North -> { X = -1; Y = 0 }
+        | East -> { X = 0; Y = 1 }
+        | South -> { X = 1; Y = 0 }
+        | West -> { X = 0; Y = -1 }
 
 let solve (topographicMap: int[,]) =
 
-    let reachedFrom (trailHead: int * int) =
+    let reachedFrom trailHead =
         let mutable reached = List.empty
 
-        let rec dfs (y0, x0) (visited: Set<int * int>) =
-            let visited = Set.add (y0, x0) visited
+        let rec dfs p0 (visited: Set<Vector2i>) =
+            let visited = Set.add p0 visited
 
-            let isInBounds (y, x) =
-                match y, x with
-                | Array2D.InBounds topographicMap _ -> Some(y, x)
+            let isInBounds point =
+                match point with
+                | Array2D.InBounds topographicMap point -> Some point
                 | _ -> None
 
-            let hasNotBeenVisited (y, x) =
-                if Set.contains (y, x) visited then None else Some(y, x)
+            let hasNotBeenVisited point =
+                if Set.contains point visited then None else Some point
 
-            let isNext height (y, x) =
-                if topographicMap[y, x] = height + 1 then
-                    Some(y, x)
+            let isNext height point =
+                if topographicMap[point.X, point.Y] = height + 1 then
+                    Some point
                 else
                     None
 
-            match topographicMap[y0, x0] with
-            | 9 -> reached <- (y0, x0) :: reached
+            match topographicMap[p0.X, p0.Y] with
+            | 9 -> reached <- p0 :: reached
             | height ->
                 Direction.Values
                 |> List.map Direction.toOffset
-                |> List.map (fun (y, x) -> y0 + y, x + x0)
+                |> List.map (fun d -> p0 + d)
                 |> List.choose (fun potentialLocation ->
                     Some potentialLocation
                     |> Option.bind isInBounds

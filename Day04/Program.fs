@@ -1,7 +1,7 @@
-﻿open System
-open System.IO
+﻿open System.IO
 
-open Common
+open Gomu.Vectors
+open Gomu.Arrays
 
 module Parser =
 
@@ -24,14 +24,14 @@ type Direction =
 
 let offset =
     function
-    | North -> -1, 0
-    | NorthEast -> -1, 1
-    | East -> 0, 1
-    | SouthEast -> 1, 1
-    | South -> 1, 0
-    | SouthWest -> 1, -1
-    | West -> 0, -1
-    | NorthWest -> -1, -1
+    | North -> { X = -1; Y = 0 }
+    | NorthEast -> { X = -1; Y = 1 }
+    | East -> { X = 0; Y = 1 }
+    | SouthEast -> { X = 1; Y = 1 }
+    | South -> { X = 1; Y = 0 }
+    | SouthWest -> { X = 1; Y = -1 }
+    | West -> { X = 0; Y = -1 }
+    | NorthWest -> { X = -1; Y = -1 }
 
 module State =
     let next =
@@ -44,28 +44,28 @@ module State =
 module S1 =
     let solve (wordSearch: char[,]) =
 
-        let rec search (y0, x0) direction state =
+        let rec search p0 direction state =
             match state with
             | 'S' -> Some direction
             | _ ->
-                let y, x = offset direction
+                let d = offset direction
 
-                match y0 + y, x0 + x with
-                | Array2D.InBounds wordSearch (y1, x1) ->
+                match p0 + d with
+                | Array2D.InBounds wordSearch p1 ->
                     match State.next state with
-                    | nextState when nextState = wordSearch[y1, x1] ->
-                        search (y1, x1) direction nextState
+                    | nextState when nextState = wordSearch[p1.X, p1.Y] ->
+                        search p1 direction nextState
                     | _ -> None
 
                 | outOfBounds -> None
 
         (0, wordSearch)
-        ||> Array2D.fold (fun acc ((i, j), value) ->
+        ||> Array2D.fold (fun acc (p, value) ->
             match value with
             | 'X' ->
                 let solutions =
                     Direction.Values
-                    |> List.choose (fun dir -> search (i, j) dir 'X')
+                    |> List.choose (fun dir -> search p dir 'X')
                     |> List.length
 
                 acc + solutions
@@ -75,7 +75,7 @@ module S2 =
     let solve (wordSearch: char[,]) =
 
         (0, wordSearch)
-        ||> Array2D.fold (fun acc ((y0, x0), value) ->
+        ||> Array2D.fold (fun acc (p0, value) ->
             match value with
             | 'A' ->
                 let diagonals =
@@ -87,12 +87,12 @@ module S2 =
                     |> List.map (fun diagonal ->
                         diagonal
                         |> List.map (fun dir ->
-                            let y, x = offset dir
+                            let d = offset dir
 
-                            match y0 + y, x0 + x with
-                            | Array2D.InBounds wordSearch (y1, x1) ->
-                                Some wordSearch[y1, x1]
-                            | outOfBounds -> None)
+                            match p0 + d with
+                            | Array2D.InBounds wordSearch p1 ->
+                                Some wordSearch[p1.X, p1.Y]
+                            | _ -> None)
                         |> function
                             | [ Some 'M'; Some 'S' ]
                             | [ Some 'S'; Some 'M' ] -> 1

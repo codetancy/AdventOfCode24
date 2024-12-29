@@ -1,6 +1,8 @@
 ﻿open System.IO
 
 open Common
+open Gomu.Vectors
+open Gomu.Arrays
 
 module Parser =
 
@@ -16,31 +18,32 @@ module Parser =
     let parse lines = lines |> Seq.map parseLine |> array2D
 
 type Direction =
-    | NORTH
-    | EAST
-    | SOUTH
-    | WEST
+    | North
+    | East
+    | South
+    | West
 
-let offset =
-    function
-    | NORTH -> 0, -1
-    | EAST -> 1, 0
-    | SOUTH -> 0, 1
-    | WEST -> -1, 0
+module Direction =
 
-let next =
-    function
-    | NORTH -> EAST
-    | EAST -> SOUTH
-    | SOUTH -> WEST
-    | WEST -> NORTH
+    let offset =
+        function // X = i, Y = j
+        | North -> { X = -1; Y = 0 }
+        | East -> { X = 0; Y = 1 }
+        | South -> { X = 1; Y = 0 }
+        | West -> { X = 0; Y = -1 }
+
+    let next =
+        function
+        | North -> East
+        | East -> South
+        | South -> West
+        | West -> North
 
 type Outcome =
     | Exited
     | Loop
 
-type Tile = int * int
-type Step = Tile * Direction
+type Step = Vector2i * Direction
 
 module S1 =
 
@@ -52,37 +55,37 @@ module S1 =
             else
                 let visited = Set.add step visited
 
-                let (y0, x0), direction = step
-                let x, y = offset direction
+                let p0, direction = step
+                let d = Direction.offset direction
 
-                match y0 + y, x0 + x with
-                | Array2D.InBounds floor (y1, x1) ->
-                    if floor[y1, x1] = -1 then
+                match p0 + d with
+                | Array2D.InBounds floor p1 ->
+                    if floor[p1.X, p1.Y] = -1 then
                         let visited = Set.remove step visited
-                        let newStep = (y0, x0), next direction
+                        let newStep = p0, Direction.next direction
                         loop visited newStep
                     else
-                        let nextStep = (y1, x1), direction
+                        let nextStep = p1, direction
                         loop visited nextStep
                 | _ -> visited, Exited
 
-        let y0, x0 = Array2D.find 1 floor
-        let step = (y0, x0), Direction.NORTH
+        let p0 = Array2D.find 1 floor
+        let step = p0, Direction.North
         loop Set.empty step
 
 module S2 =
     open S1
 
     let paradox obstacles floor =
-        let y0, x0 = Array2D.find 1 floor
-        let obstacles = Set.remove (y0, x0) obstacles
+        let startingPoint = Array2D.find 1 floor
+        let obstacles = Set.remove startingPoint obstacles
 
         obstacles
         |> Seq.indexed
-        |> Seq.map (fun (_, (y, x)) ->
-            do floor[y, x] <- -1
+        |> Seq.map (fun (_, p) ->
+            do floor[p.X, p.Y] <- -1
             let _, outcome = patrol floor
-            do floor[y, x] <- 0
+            do floor[p.X, p.Y] <- 0
             outcome)
 
 let input = File.ReadAllLines "Datasets/Day06.txt"
