@@ -1,37 +1,15 @@
 ﻿open System.IO
 
+open Common
 open Gomu.Vectors
 open Gomu.Arrays
+open Gomu.Tuples
 
 module Parser =
 
     let parseLine (line: string) = line.ToCharArray()
 
     let parse lines = lines |> Seq.map parseLine |> array2D
-
-type Direction =
-    | North
-    | NorthEast
-    | East
-    | SouthEast
-    | South
-    | SouthWest
-    | West
-    | NorthWest
-
-    static member Values =
-        [ North; NorthEast; East; SouthEast; South; SouthWest; West; NorthWest ]
-
-let offset =
-    function
-    | North -> { X = -1; Y = 0 }
-    | NorthEast -> { X = -1; Y = 1 }
-    | East -> { X = 0; Y = 1 }
-    | SouthEast -> { X = 1; Y = 1 }
-    | South -> { X = 1; Y = 0 }
-    | SouthWest -> { X = 1; Y = -1 }
-    | West -> { X = 0; Y = -1 }
-    | NorthWest -> { X = -1; Y = -1 }
 
 module State =
     let next =
@@ -42,64 +20,89 @@ module State =
         | c -> failwith $"Unrecognized character {c}"
 
 module S1 =
+    let orthogonalComponents = Orthogonal.Values |> Seq.map Offset.ofOrthogonal
+
+    let diagonalComponents =
+        Orthogonal.Diagonals
+        |> Seq.map (fun components ->
+            components |> Pair.map Offset.ofOrthogonal |> Pair.reduce (+))
+
+    let allDirections = Seq.concat [ orthogonalComponents; diagonalComponents ]
+
     let solve (wordSearch: char[,]) =
 
-        let rec search p0 direction state =
+        let rec search p0 d state =
             match state with
-            | 'S' -> Some direction
+            | 'S' -> true
             | _ ->
-                let d = offset direction
-
                 match p0 + d with
                 | Array2D.InBounds wordSearch p1 ->
                     match State.next state with
                     | nextState when nextState = wordSearch[p1.X, p1.Y] ->
-                        search p1 direction nextState
-                    | _ -> None
+                        search p1 d nextState
+                    | _ -> false
 
-                | outOfBounds -> None
+                | outOfBounds -> false
 
         (0, wordSearch)
         ||> Array2D.fold (fun acc (p, value) ->
             match value with
             | 'X' ->
                 let solutions =
-                    Direction.Values
-                    |> List.choose (fun dir -> search p dir 'X')
-                    |> List.length
+                    allDirections
+                    |> Seq.filter (fun d -> search p d 'X')
+                    |> Seq.length
 
                 acc + solutions
             | _ -> acc)
 
 module S2 =
+
+    type Region =
+        | In
+        | Out
+
+    let boundsOf grid point =
+        match point with
+        | Array2D.InBounds grid _ -> Region.In
+        | _ -> Region.Out
+
+    let oppositeCornersPairs =
+        [ (North, West), (South, East); (South, West), (North, East) ]
+
+    let oppositeCornersComponents =
+        oppositeCornersPairs
+        |> Seq.map (fun corners ->
+            corners
+            |> Pair.map (fun components ->
+                // Adding the orthogonal components to get the diagonal displacement
+                components |> Pair.map Offset.ofOrthogonal |> Pair.reduce (+)))
+        |> List.ofSeq
+
     let solve (wordSearch: char[,]) =
 
         (0, wordSearch)
         ||> Array2D.fold (fun acc (p0, value) ->
             match value with
             | 'A' ->
-                let diagonals =
-                    [ [ Direction.NorthWest; Direction.SouthEast ]
-                      [ Direction.SouthWest; Direction.NorthEast ] ]
+                let oppositeCorners =
+                    oppositeCornersComponents
+                    |> Seq.map (Pair.map (fun d -> p0 + d))
 
-                let xmas =
-                    diagonals
-                    |> List.map (fun diagonal ->
-                        diagonal
-                        |> List.map (fun dir ->
-                            let d = offset dir
+                let result =
+                    oppositeCorners
+                    |> Seq.forall (fun corners ->
+                        match Pair.map (boundsOf wordSearch) corners with
+                        | Region.In, Region.In ->
+                            corners
+                            |> Pair.map (fun p -> wordSearch[p.X, p.Y])
+                            |> function
+                                | 'S', 'M'
+                                | 'M', 'S' -> true
+                                | _ -> false
+                        | _ -> false)
 
-                            match p0 + d with
-                            | Array2D.InBounds wordSearch p1 ->
-                                Some wordSearch[p1.X, p1.Y]
-                            | _ -> None)
-                        |> function
-                            | [ Some 'M'; Some 'S' ]
-                            | [ Some 'S'; Some 'M' ] -> 1
-                            | _ -> 0)
-                    |> List.forall (fun x -> x = 1)
-
-                match xmas with
+                match result with
                 | true -> acc + 1
                 | false -> acc
             | _ -> acc)

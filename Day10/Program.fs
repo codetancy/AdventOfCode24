@@ -10,22 +10,6 @@ module Parsing =
         let lines = File.ReadLines filename
         lines |> Seq.map (fun line -> line |> Seq.map Char.toInt) |> array2D
 
-type Direction =
-    | North
-    | East
-    | South
-    | West
-
-    static member Values = [ North; East; South; West ]
-
-module Direction =
-    let toOffset =
-        function
-        | North -> { X = -1; Y = 0 }
-        | East -> { X = 0; Y = 1 }
-        | South -> { X = 1; Y = 0 }
-        | West -> { X = 0; Y = -1 }
-
 let solve (topographicMap: int[,]) =
 
     let reachedFrom trailHead =
@@ -51,8 +35,8 @@ let solve (topographicMap: int[,]) =
             match topographicMap[p0.X, p0.Y] with
             | 9 -> reached <- p0 :: reached
             | height ->
-                Direction.Values
-                |> List.map Direction.toOffset
+                Orthogonal.Values
+                |> List.map Offset.ofOrthogonal
                 |> List.map (fun d -> p0 + d)
                 |> List.choose (fun potentialLocation ->
                     Some potentialLocation

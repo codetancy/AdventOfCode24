@@ -13,26 +13,6 @@ module Parsing =
         |> Seq.map (fun line -> line.ToCharArray())
         |> array2D
 
-type Direction =
-    | North
-    | East
-    | South
-    | West
-
-    static member Values = [ North; East; South; West ]
-
-    static member Diagonals =
-        [ North, East; South, East; South, West; North, West ]
-
-module Offset =
-
-    let ofDirection =
-        function
-        | North -> { X = -1; Y = 0 }
-        | East -> { X = 0; Y = 1 }
-        | South -> { X = 1; Y = 0 }
-        | West -> { X = 0; Y = -1 }
-
 [<RequireQualifiedAccess>]
 type Region =
     | In
@@ -45,10 +25,10 @@ let regionOf garden label =
 
 let countCorners (garden: char[,]) (label: char) cell =
 
-    Direction.Diagonals
+    Orthogonal.Diagonals
     |> Seq.map (fun (d1, d2) ->
-        let d1 = Offset.ofDirection d1
-        let d2 = Offset.ofDirection d2
+        let d1 = Offset.ofOrthogonal d1
+        let d2 = Offset.ofOrthogonal d2
 
         (d1, d2, d1 + d2)
         |> Triple.map (fun offset -> cell + offset)
@@ -79,8 +59,8 @@ let priceOf cell (garden: char[,]) (label: char) (visited: HashSet<_>) =
                 do area <- Int.inc area
                 do sides <- sides + (countCorners garden label cell)
 
-                Direction.Values
-                |> Seq.map Offset.ofDirection
+                Orthogonal.Values
+                |> Seq.map Offset.ofOrthogonal
                 |> Seq.map (fun offset -> cell + offset)
                 |> Seq.iter queue.Enqueue
         | Region.Out -> perimeter <- Int.inc perimeter

@@ -17,20 +17,7 @@ module Parser =
 
     let parse lines = lines |> Seq.map parseLine |> array2D
 
-type Direction =
-    | North
-    | East
-    | South
-    | West
-
 module Direction =
-
-    let offset =
-        function // X = i, Y = j
-        | North -> { X = -1; Y = 0 }
-        | East -> { X = 0; Y = 1 }
-        | South -> { X = 1; Y = 0 }
-        | West -> { X = 0; Y = -1 }
 
     let next =
         function
@@ -43,7 +30,7 @@ type Outcome =
     | Exited
     | Loop
 
-type Step = Vector2i * Direction
+type Step = Vector2i * Orthogonal
 
 module S1 =
 
@@ -56,7 +43,7 @@ module S1 =
                 let visited = Set.add step visited
 
                 let p0, direction = step
-                let d = Direction.offset direction
+                let d = Offset.ofOrthogonal direction
 
                 match p0 + d with
                 | Array2D.InBounds floor p1 ->
@@ -70,7 +57,7 @@ module S1 =
                 | _ -> visited, Exited
 
         let p0 = Array2D.find 1 floor
-        let step = p0, Direction.North
+        let step = p0, Orthogonal.North
         loop Set.empty step
 
 module S2 =

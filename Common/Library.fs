@@ -4,6 +4,7 @@ open System
 open System.Numerics
 open Microsoft.FSharp.Core
 open System.IO
+open Gomu.Vectors
 
 [<RequireQualifiedAccess>]
 module List =
@@ -196,3 +197,23 @@ module Memory =
         dest.CopyTo(aux.AsMemory())
         source.CopyTo(dest)
         aux.AsMemory().CopyTo(source)
+
+type Orthogonal =
+    | North
+    | East
+    | South
+    | West
+
+    static member Values = [ North; East; South; West ]
+
+    static member Diagonals =
+        [ North, East; South, East; South, West; North, West ]
+
+module Offset =
+
+    let ofOrthogonal =
+        function
+        | Orthogonal.North -> { X = -1; Y = 0 }
+        | Orthogonal.East -> { X = 0; Y = 1 }
+        | Orthogonal.South -> { X = 1; Y = 0 }
+        | Orthogonal.West -> { X = 0; Y = -1 }

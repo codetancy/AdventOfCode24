@@ -16,10 +16,8 @@ module Array2D =
 
     /// Checks whether the given indices are within the given Array's bounds
     let inBounds coord (array: 'T[,]) =
-        let between lo hi n = n > lo && n < hi
-
-        (coord.X |> between -1 (Array2D.length1 array))
-        && (coord.Y |> between -1 (Array2D.length2 array))
+        (coord.X > -1 && coord.X < Array2D.length1 array)
+        && (coord.Y > -1 && coord.Y < Array2D.length2 array)
 
     let mapAt index1 index2 transform (array: 'T[,]) =
         array[index1, index2] <- transform array[index1, index2]
